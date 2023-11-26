@@ -2,34 +2,47 @@ syntax = "proto3";
 
 package weather.v1;
 
+enum DayOfWeek {
+  MONDAY = 0;
+  TUESDAY = 1;
+  WEDNESDAY = 2;
+  THURSDAY = 3;
+  FRIDAY = 4;
+  SATURDAY = 5;
+  SUNDAY = 6;
+}
+
+enum Month {
+  JANUARY = 0;
+  FEBRUARY = 1;
+  MARCH = 2;
+  APRIL = 3;
+  MAY = 4;
+  JUNE = 5;
+  JULY = 6;
+  AUGUST = 7;
+  SEPTEMBER = 8;
+  OCTOBER = 9;
+  NOVEMBER = 10;
+  DECEMBER = 11;
+}
+
 message WeatherData {
-  message TimeInfo {
-    int32 hours = 1;
-    int32 minutes = 2;
-  }
-
-  message DateInfo {
-    string day_of_week = 1;
-    string month = 2;
-    int32 day = 3;
-    int32 year = 4;
-  }
-
-  message WeatherInfo {
-    float temperature = 1;
-    float humidity = 2;
-    float pressure = 3;
-    float wind_speed = 4;
-    float wind_direction = 5;
-    float rain_last_hour = 6;
-    float solar_radiation = 7;
-    float humidex = 8;
-    float dew_point = 9;
-    float wind_chill = 10;
-    int32 snow_depth = 11;
-  }
-
-  TimeInfo time = 1;
-  DateInfo date = 2;
-  WeatherInfo weather = 3;
+  int32 hours = 1;
+  int32 minutes = 2;
+  DayOfWeek day_of_week = 3;
+  Month month = 4;
+  int32 day = 5;
+  int32 year = 6;
+  float temperature = 7;
+  float humidity = 8;
+  float pressure = 9;
+  float wind_speed = 10;
+  float wind_direction = 11;
+  float rain_last_hour = 12;
+  float solar_radiation = 13;
+  float humidex = 14;
+  float dew_point = 15;
+  float wind_chill = 16;
+  int32 snow_depth = 17;
 }
