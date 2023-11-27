@@ -3,8 +3,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/_endian.h>
-#include <sys/_types/_off_t.h>
+
+#include <sys/types.h>
+#include <stddef.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+#ifdef _WIN32
+#include <winsock.h>
+#endif
 
 WeatherData *weather_data_init() {
   WeatherData *weather_data = calloc(1, sizeof(WeatherData));
@@ -16,7 +23,7 @@ WeatherData *weather_data_init() {
 
 void weather_data_free(WeatherData *weather_data) { free(weather_data); }
 
-int weather_data_serialize(WeatherData *weather_data, uint8_t **buffer) {
+int weather_data_serialize(WeatherData *weather_data, uint8_t *buffer, size_t *size_ret) {
   size_t size =
       sizeof(weather_data->day_of_week) + sizeof(weather_data->month) +
       sizeof(weather_data->time) + sizeof(weather_data->day) +
@@ -29,6 +36,7 @@ int weather_data_serialize(WeatherData *weather_data, uint8_t **buffer) {
       sizeof(weather_data->snow_depth);
 
   uint8_t *buf = malloc(size);
+  *size_ret = size;
 
   if (buf == NULL) {
     return -1;
@@ -102,7 +110,7 @@ int weather_data_serialize(WeatherData *weather_data, uint8_t **buffer) {
   tmpl = htonl(tmpl);
   memcpy(offset_ptr, &tmpl, sizeof(uint32_t));
 
-  *buffer = buf;
+  buffer = buf;
 
   return 0;
 }
@@ -141,49 +149,61 @@ int weather_data_deserialize(WeatherData *weather_data, uint8_t *buffer) {
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
   tmpl = ntohl(tmpl);
   memcpy(&wd->temperature, &tmpl, sizeof(uint32_t));
+  offset_ptr += sizeof(uint32_t);
 
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
   tmpl = ntohl(tmpl);
   memcpy(&wd->humidity, &tmpl, sizeof(uint32_t));
-
+  offset_ptr += sizeof(uint32_t);
+  
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
   tmpl = ntohl(tmpl);
   memcpy(&wd->pressure, &tmpl, sizeof(uint32_t));
+  offset_ptr += sizeof(uint32_t);
 
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
   tmpl = ntohl(tmpl);
   memcpy(&wd->wind_speed, &tmpl, sizeof(uint32_t));
+  offset_ptr += sizeof(uint32_t);
 
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
   tmpl = ntohl(tmpl);
   memcpy(&wd->wind_direction, &tmpl, sizeof(uint32_t));
+  offset_ptr += sizeof(uint32_t);
 
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
   tmpl = ntohl(tmpl);
   memcpy(&wd->rain_last_hour, &tmpl, sizeof(uint32_t));
+  offset_ptr += sizeof(uint32_t);
 
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
   tmpl = ntohl(tmpl);
   memcpy(&wd->solar_radiation, &tmpl, sizeof(uint32_t));
+  offset_ptr += sizeof(uint32_t);
 
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
   tmpl = ntohl(tmpl);
   memcpy(&wd->humidex, &tmpl, sizeof(uint32_t));
+  offset_ptr += sizeof(uint32_t);
 
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
   tmpl = ntohl(tmpl);
   memcpy(&wd->dew_point, &tmpl, sizeof(uint32_t));
+  offset_ptr += sizeof(uint32_t);
 
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
   tmpl = ntohl(tmpl);
   memcpy(&wd->wind_direction, &tmpl, sizeof(uint32_t));
+  offset_ptr += sizeof(uint32_t);
 
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
   tmpl = ntohl(tmpl);
   memcpy(&wd->snow_depth, &tmpl, sizeof(uint32_t));
 
-  memcpy(weather_data, wd, sizeof(WeatherData));
-  weather_data_free(wd);
+
+  // memcpy(weather_data, wd, sizeof(WeatherData));
+  // weather_data_free(wd);
+  weather_data = wd;
 
   return 0;
 }
