@@ -11,16 +11,21 @@
 #define MAX_BACKLOG 5
 #define PORT 8080
 
-struct sockaddr_in initialize_server_address() {
+struct sockaddr_in initialize_server_address(char *port) {
   struct sockaddr_in server_address;
   server_address.sin_family = AF_INET;
-  server_address.sin_port = htons(PORT);
+  server_address.sin_port = htons(atoi(port));
   server_address.sin_addr.s_addr = INADDR_ANY;
   memset(&server_address.sin_zero, 0, 8);
   return server_address;
 }
 
-int main() {
+int main(int argc, char **argv) {
+  if (argc != 2) {
+    printf("Usage: %s <port>\n", argv[0]);
+    return 1;
+  };
+
   int server_socket = socket(AF_INET, SOCK_STREAM, 0);
 
   if (server_socket == -1) {
@@ -28,7 +33,7 @@ int main() {
     return 1;
   }
 
-  struct sockaddr_in server_address = initialize_server_address();
+  struct sockaddr_in server_address = initialize_server_address(argv[1]);
 
   if (bind(server_socket, (struct sockaddr *)&server_address,
            sizeof(struct sockaddr_in)) == -1) {

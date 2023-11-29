@@ -8,15 +8,18 @@
 
 #include "weather_data.pb.h"
 
-struct sockaddr_in initialize_server_address() {
+struct sockaddr_in initialize_server_address(char *ip, char *port) {
   struct sockaddr_in server_address;
   server_address.sin_family = AF_INET;
-  server_address.sin_port = htons(8080);
-  server_address.sin_addr.s_addr = INADDR_ANY;
+  server_address.sin_port = htons(atoi(port));
+  if (inet_pton(AF_INET, ip, &server_address.sin_addr) <= 0) {
+    perror("Error converting ip address");
+    exit(1);
+  }
   return server_address;
 }
 
-int main() {
+int main(int argc, char **argv) {
 #ifdef _WIN32
   WSADATA wsaData;
   if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -25,13 +28,19 @@ int main() {
   }
 #endif
 
+  if (argc != 3) {
+    printf("Usage: %s <server ip> <port>\n", argv[0]);
+    return 1;
+  }
+
   int client_socket = socket(AF_INET, SOCK_STREAM, 0);
   if (client_socket == -1) {
     perror("Error creating socket\n");
     return 1;
   }
 
-  struct sockaddr_in server_address = initialize_server_address();
+  struct sockaddr_in server_address =
+      initialize_server_address(argv[1], argv[2]);
 
   if (connect(client_socket, (struct sockaddr *)&server_address,
               sizeof(server_address)) == -1) {
