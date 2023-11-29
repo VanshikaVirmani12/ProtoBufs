@@ -1,8 +1,8 @@
 #ifndef WEATHER_DATA_PB_H
 #define WEATHER_DATA_PB_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 typedef enum DayOfWeek {
   MONDAY = 0,
@@ -53,8 +53,9 @@ typedef struct WeatherData {
 WeatherData *weather_data_init();
 void weather_data_free(WeatherData *weather_data);
 
-int weather_data_serialize(WeatherData *weather_data, uint8_t *buffer, size_t *size_ret);
-int weather_data_deserialize(WeatherData *weather_data, uint8_t *buffer);
+int weather_data_serialize(WeatherData *weather_data, uint8_t **buffer,
+                           size_t *size_ret);
+int weather_data_deserialize(WeatherData **weather_data, uint8_t *buffer);
 int print_weather_data(WeatherData *weather_data);
 
 #endif // WEATHER_DATA_PB_H
