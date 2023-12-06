@@ -26,7 +26,7 @@ typedef struct WeatherData {
 
 WeatherData *weather_data_init();
 xmlNodePtr weather_data_to_xml(const WeatherData *weatherData);
-WeatherDataJson* xml_to_weather_data(xmlNodePtr weathernode);
+WeatherData * xml_to_weather_data(xmlNodePtr weathernode);
 
 int print_weather_data(WeatherData *weatherData);
 
