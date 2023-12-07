@@ -2,10 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/_types/_size_t.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "encrypt.h"
 #include "weather_data_def.h"
 
 struct sockaddr_in initialize_server_address(char *ip, char *port) {
@@ -48,6 +50,32 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  EVP_PKEY *pkey = EVP_PKEY_new();
+  generate_keys(pkey);
+  long public_key_length = 0;
+  char *public_key = NULL;
+  public_key_length = get_public_key(pkey, &public_key);
+
+  char *server_public_key = malloc(public_key_length);
+
+  if (recv(client_socket, server_public_key, public_key_length, 0) == -1) {
+    perror("Error receiving public key from server");
+    return 1;
+  }
+  if (send(client_socket, public_key, public_key_length, 0) == -1) {
+    perror("Error sending public key to server");
+    return 1;
+  }
+
+  EVP_PKEY *server_pkey = get_public_key_from_string(server_public_key);
+  // encrypt_message(server_pkey, "Hello", &encrypted_message,
+  //                 &encrypted_message_length);
+  // size_t sent =
+  //     send(client_socket, encrypted_message, encrypted_message_length, 0);
+  // printf("Sent %zu bytes\n", sent);
+  // printf("Server public key: %s\n", server_public_key);
+  // printf("Client public key: %s\n", public_key);
+
   WeatherData *weather_data = weather_data_init();
   weather_data->day_of_week = "Monday";
   weather_data->month = "June";
@@ -85,7 +113,15 @@ int main(int argc, char **argv) {
   printf("Sending %lu bytes\n", size);
   printf("Buffer: %s\n", buffer);
   size_t ret;
-  if ((ret = send(client_socket, buffer, size, 0)) != size) {
+  char *encrypted_message;
+  size_t encrypted_message_length;
+  encrypt_message(server_pkey, (char *)buffer, &encrypted_message,
+                  &encrypted_message_length);
+  printf("Encrypted message: %s\n", encrypted_message);
+  printf("Encrypted message length: %zu\n", encrypted_message_length);
+
+  if ((ret = send(client_socket, encrypted_message, encrypted_message_length,
+                  0)) != size) {
     printf("ret: %zu\n", ret);
     perror("Error sending data");
     return 1;
