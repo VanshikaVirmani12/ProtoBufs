@@ -3,25 +3,8 @@
 #include <sys/_endian.h>
 #include <sys/_types/_off_t.h>
 
-WeatherDataJson *weather_data_json_init() {
-  WeatherDataJson *weather_data = calloc(1, sizeof(WeatherDataJson));
-  if (weather_data == NULL) {
-    return NULL;
-  }
-  return weather_data;
-}
-
-void weather_data_json_free(WeatherDataJson *weather_data) {
-  if (weather_data == NULL) {
-    return;
-  }
-  // free(weather_data->day_of_week);
-  // free(weather_data->month);
-  free(weather_data);
-}
-
 // Serialize WeatherDataJson struct to JSON
-json_t *weather_data_json_serialize(const WeatherDataJson *weatherDataJson) {
+json_t *weather_data_json_serialize(const WeatherData *weatherDataJson) {
   json_t *obj = json_object();
   json_object_set_new(obj, "day_of_week",
                       json_string(weatherDataJson->day_of_week));
@@ -51,9 +34,8 @@ json_t *weather_data_json_serialize(const WeatherDataJson *weatherDataJson) {
 }
 
 // Deserialize JSON to WeatherDataJson struct
-
-WeatherDataJson *weather_data_json_deserialize(json_t *json) {
-  WeatherDataJson *weather_data = weather_data_json_init();
+WeatherData *weather_data_json_deserialize(json_t *json) {
+  WeatherData *weather_data = weather_data_init();
   if (weather_data == NULL) {
     return NULL;
   }
@@ -63,14 +45,14 @@ WeatherDataJson *weather_data_json_deserialize(json_t *json) {
     free(weather_data);
     return NULL;
   }
-  weather_data->day_of_week = strdup(json_string_value(day_of_week));
+  weather_data->day_of_week = (char *)json_string_value(day_of_week);
 
   json_t *month = json_object_get(json, "month");
   if (month == NULL) {
     free(weather_data);
     return NULL;
   }
-  weather_data->month = strdup(json_string_value(month));
+  weather_data->month = (char *)json_string_value(month);
 
   json_t *time = json_object_get(json, "time");
   if (time == NULL) {
@@ -171,25 +153,4 @@ WeatherDataJson *weather_data_json_deserialize(json_t *json) {
   weather_data->snow_depth = json_integer_value(snow_depth);
 
   return weather_data;
-}
-
-// Print weather data
-int print_weather_data(const WeatherDataJson *weather_data) {
-  printf("Day of week: %s\n", weather_data->day_of_week);
-  printf("Month: %s\n", weather_data->month);
-  printf("Time: %d\n", weather_data->time);
-  printf("Day: %d\n", weather_data->day);
-  printf("Year: %d\n", weather_data->year);
-  printf("Temperature: %f\n", weather_data->temperature);
-  printf("Humidity: %f\n", weather_data->humidity);
-  printf("Pressure: %f\n", weather_data->pressure);
-  printf("Wind speed: %f\n", weather_data->wind_speed);
-  printf("Wind direction: %f\n", weather_data->wind_direction);
-  printf("Rain last hour: %f\n", weather_data->rain_last_hour);
-  printf("Solar radiation: %f\n", weather_data->solar_radiation);
-  printf("Humidex: %f\n", weather_data->humidex);
-  printf("Dew point: %f\n", weather_data->dew_point);
-  printf("Wind chill: %f\n", weather_data->wind_chill);
-  printf("Snow depth: %d\n", weather_data->snow_depth);
-  return 0;
 }

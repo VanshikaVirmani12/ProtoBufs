@@ -1,4 +1,5 @@
-#include "weather_data.pb.h"
+#include "weather_data_def.h"
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -21,8 +22,8 @@ struct sockaddr_in initialize_server_address(char *port) {
 }
 
 int main(int argc, char **argv) {
-  if (argc != 2) {
-    printf("Usage: %s <port>\n", argv[0]);
+  if (argc != 3) {
+    printf("Usage: %s <port> <type of encoding>\n", argv[0]);
     return 1;
   };
 
@@ -54,11 +55,19 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  uint8_t buffer[sizeof(WeatherData)];
+  int type = 0;
+
+  type = atoi(argv[2]);
+  if (type < 0 || type > 2) {
+    printf("Invalid encode type\n");
+    return 1;
+  }
+
+  uint8_t buffer[BUFSIZ];
   WeatherData *weather_data = NULL;
   recv(client_socket, buffer, sizeof(buffer), 0);
   printf("Received %lu bytes\n", sizeof(buffer));
-  weather_data_deserialize(&weather_data, buffer);
+  weather_data_deserialize(&weather_data, buffer, type);
   print_weather_data(weather_data);
 
   // send(client_socket, "Hello from server", sizeof("Hello from server"), 0);

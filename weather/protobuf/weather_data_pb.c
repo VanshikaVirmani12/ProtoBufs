@@ -1,4 +1,4 @@
-#include "weather_data.pb.h"
+#include "weather_data_pb.h"
 
 #include <netinet/in.h>
 #include <stddef.h>
@@ -13,24 +13,14 @@
 #include <winsock.h>
 #endif
 
-WeatherData *weather_data_init() {
-  WeatherData *weather_data = calloc(1, sizeof(WeatherData));
-  if (weather_data == NULL) {
-    return NULL;
-  }
-  return weather_data;
-}
-
-void weather_data_free(WeatherData *weather_data) { free(weather_data); }
-
-int weather_data_serialize(WeatherData *weather_data, uint8_t **buffer,
-                           size_t *size_ret) {
+int weather_data_pb_serialize(WeatherData *weather_data, uint8_t **buffer,
+                              size_t *size_ret) {
   size_t size =
-      sizeof(weather_data->day_of_week) + sizeof(weather_data->month) +
-      sizeof(weather_data->time) + sizeof(weather_data->day) +
-      sizeof(weather_data->year) + sizeof(weather_data->temperature) +
-      sizeof(weather_data->humidity) + sizeof(weather_data->pressure) +
-      sizeof(weather_data->wind_speed) + sizeof(weather_data->wind_direction) +
+      sizeof(uint32_t) + sizeof(uint32_t) + sizeof(weather_data->time) +
+      sizeof(weather_data->day) + sizeof(weather_data->year) +
+      sizeof(weather_data->temperature) + sizeof(weather_data->humidity) +
+      sizeof(weather_data->pressure) + sizeof(weather_data->wind_speed) +
+      sizeof(weather_data->wind_direction) +
       sizeof(weather_data->rain_last_hour) +
       sizeof(weather_data->solar_radiation) + sizeof(weather_data->humidex) +
       sizeof(weather_data->dew_point) + sizeof(weather_data->wind_chill) +
@@ -46,11 +36,31 @@ int weather_data_serialize(WeatherData *weather_data, uint8_t **buffer,
   uint32_t tmpl;
   uint8_t *offset_ptr = buf;
 
-  tmpl = htonl(weather_data->day_of_week);
+  char *days[] = {"Monday", "Tuesday",  "Wednesday", "Thursday",
+                  "Friday", "Saturday", "Sunday"};
+  char *months[] = {"January",   "February", "March",    "April",
+                    "May",       "June",     "July",     "August",
+                    "September", "October",  "November", "December"};
+  uint32_t temp_date = 0;
+  for (int i = 0; i < 7; i++) {
+    if (strcmp(weather_data->day_of_week, days[i]) == 0) {
+      temp_date = i;
+      break;
+    }
+  }
+
+  tmpl = htonl(temp_date);
   memcpy(offset_ptr, &tmpl, sizeof(uint32_t));
   offset_ptr += sizeof(uint32_t);
 
-  tmpl = htonl(weather_data->month);
+  for (int i = 0; i < 7; i++) {
+    if (strcmp(weather_data->month, months[i]) == 0) {
+      temp_date = i;
+      break;
+    }
+  }
+
+  tmpl = htonl(temp_date);
   memcpy(offset_ptr, &tmpl, sizeof(uint32_t));
   offset_ptr += sizeof(uint32_t);
 
@@ -134,7 +144,7 @@ int weather_data_serialize(WeatherData *weather_data, uint8_t **buffer,
   return 0;
 }
 
-int weather_data_deserialize(WeatherData **weather_data, uint8_t *buffer) {
+int weather_data_pb_deserialize(WeatherData **weather_data, uint8_t *buffer) {
   if (buffer == NULL) {
     return -1;
   }
@@ -148,12 +158,20 @@ int weather_data_deserialize(WeatherData **weather_data, uint8_t *buffer) {
 
   uint32_t tmpl;
 
+  char *days[] = {"Monday", "Tuesday",  "Wednesday", "Thursday",
+                  "Friday", "Saturday", "Sunday"};
+  char *months[] = {"January",   "February", "March",    "April",
+                    "May",       "June",     "July",     "August",
+                    "September", "October",  "November", "December"};
+
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
-  wd->day_of_week = ntohl(tmpl);
+  wd->day_of_week = malloc(strlen(days[ntohl(tmpl)]) + 1);
+  strcpy(wd->day_of_week, days[ntohl(tmpl)]);
   offset_ptr += sizeof(uint32_t);
 
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
-  wd->month = ntohl(tmpl);
+  wd->month = malloc(strlen(months[ntohl(tmpl)]) + 1);
+  strcpy(wd->month, months[ntohl(tmpl)]);
   offset_ptr += sizeof(uint32_t);
 
   memcpy(&tmpl, offset_ptr, sizeof(uint32_t));
@@ -224,30 +242,5 @@ int weather_data_deserialize(WeatherData **weather_data, uint8_t *buffer) {
 
   *weather_data = wd;
 
-  return 0;
-}
-
-int print_weather_data(WeatherData *weather_data) {
-  char *days[] = {"Monday", "Tuesday",  "Wednesday", "Thursday",
-                  "Friday", "Saturday", "Sunday"};
-  char *months[] = {"January",   "February", "March",    "April",
-                    "May",       "June",     "July",     "August",
-                    "September", "October",  "November", "December"};
-  printf("Day of week: %s\n", days[weather_data->day_of_week]);
-  printf("Month: %s\n", months[weather_data->month]);
-  printf("Time: %d\n", weather_data->time);
-  printf("Day: %d\n", weather_data->day);
-  printf("Year: %d\n", weather_data->year);
-  printf("Temperature: %f\n", weather_data->temperature);
-  printf("Humidity: %f\n", weather_data->humidity);
-  printf("Pressure: %f\n", weather_data->pressure);
-  printf("Wind speed: %f\n", weather_data->wind_speed);
-  printf("Wind direction: %f\n", weather_data->wind_direction);
-  printf("Rain last hour: %f\n", weather_data->rain_last_hour);
-  printf("Solar radiation: %f\n", weather_data->solar_radiation);
-  printf("Humidex: %f\n", weather_data->humidex);
-  printf("Dew point: %f\n", weather_data->dew_point);
-  printf("Wind chill: %f\n", weather_data->wind_chill);
-  printf("Snow depth: %d\n", weather_data->snow_depth);
   return 0;
 }
