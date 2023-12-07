@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <openssl/aes.h>
 #include <openssl/evp.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
 #include "encrypt.h"
 
 int encryptData(const unsigned char *plaintext, size_t plaintext_len, const unsigned char *key, const unsigned char *iv, unsigned char **ciphertext, size_t *ciphertext_len) {
