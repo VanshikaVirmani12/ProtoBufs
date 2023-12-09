@@ -63,13 +63,15 @@ int main(int argc, char **argv) {
   int key_size = 4096;
   if (type == 2) {
     key_size = 8192;
+  } else if (type == 0) {
+    key_size = 2048;
   }
   generate_rsa_key(&pkey, key_size);
   long public_key_length = 0;
   char *public_key = NULL;
   public_key_length = get_public_key(pkey, &public_key);
 
-  char *server_public_key = malloc(public_key_length);
+  char server_public_key[public_key_length];
 
   if (recv(client_socket, server_public_key, public_key_length, 0) == -1) {
     perror("Error receiving public key from server");
@@ -79,8 +81,6 @@ int main(int argc, char **argv) {
     perror("Error sending public key to server");
     return 1;
   }
-  // printf("Server public key: %s\n", server_public_key);
-  // printf("Client public key: %s\n", public_key);
 
   size_t ret;
   char *message = "Hello from client. Hello from client. Hello from client. "
@@ -92,16 +92,6 @@ int main(int argc, char **argv) {
 
   char *encrypted_message = NULL;
   size_t encrypted_message_length;
-
-  // encrypt_message(server_pkey, message, &encrypted_message,
-  //                 &encrypted_message_length);
-
-  // printf("Encrypted message: %s\n", encrypted_message);
-  // size_t sent =
-  //     send(client_socket, encrypted_message, encrypted_message_length, 0);
-  // printf("Sent %zu bytes\n", sent);
-  // printf("Server public key: %s\n", server_public_key);
-  // printf("Client public key: %s\n", public_key);
 
   WeatherData *weather_data = weather_data_init();
   strcpy(weather_data->day_of_week, "Monday");
@@ -132,8 +122,6 @@ int main(int argc, char **argv) {
   printf("Sending %lu bytes\n", size);
   printf("Buffer: %s\n", buffer);
 
-  // char *encrypted_message;
-  // size_t encrypted_message_length;
   encrypt_message(server_pkey, (char *)buffer, &encrypted_message,
                   &encrypted_message_length);
   printf("Encrypted message: %s\n", encrypted_message);
@@ -146,13 +134,12 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // char buffer[BUFSIZ];
-
-  // recv(client_socket, buffer, sizeof(buffer), 0);
-  // printf("Server: %s\n", buffer);
-
   weather_data_free(weather_data);
   free(buffer);
+
+  free(encrypted_message);
+  free(public_key);
+  EVP_PKEY_free(pkey);
 
   close(client_socket);
 

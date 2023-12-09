@@ -42,7 +42,6 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-
   int server_socket = socket(AF_INET, SOCK_STREAM, 0);
 
   if (server_socket == -1) {
@@ -64,68 +63,59 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  int client_socket = accept(server_socket, NULL, NULL);
-  if (client_socket == -1) {
-    perror("Error accepting connection");
-    close(server_socket);
-    return 1;
-  }
-
   EVP_PKEY *pkey = EVP_PKEY_new();
   // generate_keys(pkey);
   int key_size = 4096;
   if (type == 2) {
     key_size = 8192;
+  } else if (type == 0) {
+    key_size = 2048;
   }
   generate_rsa_key(&pkey, key_size);
   long public_key_length = 0;
   char *public_key = NULL;
   public_key_length = get_public_key(pkey, &public_key);
 
-  if (send(client_socket, public_key, public_key_length, 0) == -1) {
-    perror("Error sending public key");
-    close(server_socket);
+  while (1) {
+    printf("Waiting for connection...\n");
+    int client_socket = accept(server_socket, NULL, NULL);
+    if (client_socket == -1) {
+      perror("Error accepting connection");
+      continue;
+    }
+    printf("Connection accepted\n");
+
+    if (send(client_socket, public_key, public_key_length, 0) == -1) {
+      perror("Error sending public key");
+      close(client_socket);
+      continue;
+    };
+    char client_public_key[public_key_length];
+    if (recv(client_socket, client_public_key, public_key_length, 0) == -1) {
+      perror("Error receiving client public key");
+      close(client_socket);
+      continue;
+    };
+
+    char buffer[BUFSIZ];
+    WeatherData *weather_data = NULL;
+    size_t received = recv(client_socket, buffer, sizeof(buffer), 0);
+    printf("Received %lu bytes\n", received);
+    printf("Received: %s\n", buffer);
+    char *decrypted_message = NULL;
+    size_t decrypted_message_length = 0;
+    decrypt_message(pkey, buffer, &decrypted_message, &decrypted_message_length,
+                    received);
+    printf("Decrypted message: %s\n", decrypted_message);
+    weather_data_deserialize(&weather_data, (uint8_t *)decrypted_message, type);
+    print_weather_data(weather_data);
+
+    weather_data_free(weather_data);
+    free(decrypted_message);
+
     close(client_socket);
-    return 1;
-  };
-  char *client_public_key = malloc(public_key_length);
-  if (recv(client_socket, client_public_key, public_key_length, 0) == -1) {
-    perror("Error receiving client public key");
-    close(server_socket);
-    close(client_socket);
-    return 1;
-  };
-  // printf("Client public key: %s\n", client_public_key);
-  // printf("Server public key: %s\n", public_key);
-
-  // char buffer[2048];
-  // size_t received = recv(client_socket, buffer, sizeof(buffer), 0);
-  // printf("Received %lu bytes\n", received);
-  // printf("Received: %s\n", buffer);
-
-  // char *decrypted_message = NULL;
-  // size_t decrypted_message_length = 0;
-  // decrypt_message(pkey, buffer, &decrypted_message,
-  // &decrypted_message_length,
-  //                 received);
-  // printf("Decrypted message: %s\n", decrypted_message);
-
- 
-  char buffer[BUFSIZ];
-  WeatherData *weather_data = NULL;
-  size_t received = recv(client_socket, buffer, sizeof(buffer), 0);
-  printf("Received %lu bytes\n", received);
-  printf("Received: %s\n", buffer);
-  char *decrypted_message = NULL;
-  size_t decrypted_message_length = 0;
-  decrypt_message(pkey, buffer, &decrypted_message, &decrypted_message_length,
-                  received);
-  printf("Decrypted message: %s\n", decrypted_message);
-  weather_data_deserialize(&weather_data, (uint8_t *)decrypted_message, type);
-  print_weather_data(weather_data);
-
-  // send(client_socket, "Hello from server", sizeof("Hello from server"), 0);
-
+  }
+  free(public_key);
+  EVP_PKEY_free(pkey);
   close(server_socket);
-  close(client_socket);
 }
