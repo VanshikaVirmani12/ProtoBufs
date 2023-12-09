@@ -83,11 +83,6 @@ int main(int argc, char **argv) {
   }
 
   size_t ret;
-  char *message = "Hello from client. Hello from client. Hello from client. "
-                  "Hello from client. Hello from client. Hello from client. "
-                  "Hello from client. Hello from client. Hello from client. "
-                  "Hello from client. Hello from client. Hello from client.";
-  size_t message_length = strlen(message) + 1;
   EVP_PKEY *server_pkey = get_public_key_from_string(server_public_key);
 
   char *encrypted_message = NULL;
@@ -105,7 +100,7 @@ int main(int argc, char **argv) {
   weather_data->wind_speed = 0.7;
   weather_data->wind_direction = 0.8;
   weather_data->rain_last_hour = 0.9;
-  weather_data->solar_radiation = 1.0;
+  weather_data->solar_radiation = -1.0;
   weather_data->humidex = 1.1;
   weather_data->dew_point = 1.2;
   weather_data->wind_chill = 1.3;
