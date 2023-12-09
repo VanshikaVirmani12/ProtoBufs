@@ -43,7 +43,6 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-
   int client_socket = socket(AF_INET, SOCK_STREAM, 0);
   if (client_socket == -1) {
     perror("Error creating socket\n");
@@ -80,11 +79,14 @@ int main(int argc, char **argv) {
     perror("Error sending public key to server");
     return 1;
   }
-  printf("Server public key: %s\n", server_public_key);
-  printf("Client public key: %s\n", public_key);  
+  // printf("Server public key: %s\n", server_public_key);
+  // printf("Client public key: %s\n", public_key);
 
   size_t ret;
-  char *message = "Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client.";
+  char *message = "Hello from client. Hello from client. Hello from client. "
+                  "Hello from client. Hello from client. Hello from client. "
+                  "Hello from client. Hello from client. Hello from client. "
+                  "Hello from client. Hello from client. Hello from client.";
   size_t message_length = strlen(message) + 1;
   EVP_PKEY *server_pkey = get_public_key_from_string(server_public_key);
 
@@ -102,8 +104,8 @@ int main(int argc, char **argv) {
   // printf("Client public key: %s\n", public_key);
 
   WeatherData *weather_data = weather_data_init();
-  weather_data->day_of_week = "Monday";
-  weather_data->month = "June";
+  strcpy(weather_data->day_of_week, "Monday");
+  strcpy(weather_data->month, "June");
   weather_data->time = 1838;
   weather_data->day = 5;
   weather_data->year = 2021;
@@ -119,7 +121,6 @@ int main(int argc, char **argv) {
   weather_data->wind_chill = 1.3;
   weather_data->snow_depth = 19;
 
-  
   uint8_t *buffer = NULL;
   size_t size;
   if (weather_data_serialize(weather_data, &buffer, &size, type) == -1) {

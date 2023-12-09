@@ -14,10 +14,19 @@ WeatherData *weather_data_init() {
   if (weather_data == NULL) {
     return NULL;
   }
+  weather_data->day_of_week = calloc(1, 10 * sizeof(char));
+  weather_data->month = calloc(1, 10 * sizeof(char));
   return weather_data;
 }
 
-void weather_data_free(WeatherData *weather_data) { free(weather_data); }
+void weather_data_free(WeatherData *weather_data) {
+  if (weather_data == NULL) {
+    return;
+  }
+  free(weather_data->day_of_week);
+  free(weather_data->month);
+  free(weather_data);
+}
 
 void print_weather_data(WeatherData *weather_data) {
   printf("Day of week: %s\n", weather_data->day_of_week);
@@ -43,7 +52,7 @@ int weather_data_serialize(WeatherData *weather_data, uint8_t **buffer,
   switch (type) {
     // PB
   case 0: {
-    return weather_data_pb_serialize(weather_data, buffer, size_ret);
+    return weather_data_pb_serialize2(weather_data, buffer, size_ret);
     break;
   }
 
@@ -93,7 +102,7 @@ int weather_data_deserialize(WeatherData **weather_data, uint8_t *buffer,
   switch (type) {
     // PB
   case 0: {
-    return weather_data_pb_deserialize(weather_data, buffer);
+    return weather_data_pb_deserialize2(weather_data, buffer);
     break;
   }
     // JSON
