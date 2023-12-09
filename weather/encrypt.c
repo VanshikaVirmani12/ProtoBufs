@@ -3,6 +3,45 @@
 
 #include "encrypt.h"
 
+#include <openssl/err.h>
+
+int generate_rsa_key(EVP_PKEY **pkey, int key_size) {
+  EVP_PKEY_CTX *pctx = NULL; 
+  
+  pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+
+  if (!pctx) {
+    fprintf(stderr, "Error creating EVP_PKEY_CTX.\n");
+    return 1;
+  }
+
+  if (EVP_PKEY_keygen_init(pctx) <= 0) {
+    fprintf(stderr, "Error initializing EVP_PKEY key generation context.\n");
+    EVP_PKEY_CTX_free(pctx);
+    return 1;
+  }
+
+      // Set RSA key size
+    if (EVP_PKEY_CTX_set_rsa_keygen_bits(pctx, key_size) <= 0) {
+        fprintf(stderr, "Error setting RSA key size.\n");
+        EVP_PKEY_CTX_free(pctx);
+        return 1;
+    }
+
+
+    // Generate the RSA key pair
+    if (EVP_PKEY_keygen(pctx, pkey) <= 0) {
+        fprintf(stderr, "Error generating RSA key pair.\n");
+        EVP_PKEY_CTX_free(pctx);
+        return 1;
+    }
+
+    EVP_PKEY_CTX_free(pctx);
+
+    return 0;
+
+} 
+
 void generate_keys(EVP_PKEY *pkey) {
   EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
 
@@ -93,8 +132,11 @@ void encrypt_message(EVP_PKEY *pkey, char *message, char **encrypted_message,
     printf("Error allocating memory for encrypted message\n");
     return;
   }
-  if (EVP_PKEY_encrypt(ctx, ciphertext, encrypted_message_length,
-                       (unsigned char *)message, strlen(message)) <= 0) {
+  int retval;
+  if ((retval = EVP_PKEY_encrypt(ctx, ciphertext, encrypted_message_length,
+                       (unsigned char *)message, strlen(message))) <= 0) {
+    ERR_print_errors_fp(stderr);
+    printf("%d\n", retval);
     printf("Error encrypting message\n");
     return;
   }

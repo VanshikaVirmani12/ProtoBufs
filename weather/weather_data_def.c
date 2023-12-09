@@ -76,6 +76,7 @@ int weather_data_serialize(WeatherData *weather_data, uint8_t **buffer,
     xmlFreeDoc(doc);
     xmlCleanupParser();
     xmlMemoryDump();
+    return 0;
     break;
   }
 
@@ -129,6 +130,10 @@ int weather_data_deserialize(WeatherData **weather_data, uint8_t *buffer,
       return -1;
     }
     *weather_data = wd;
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+    xmlMemoryDump();
+    return 0;
     break;
   }
   default: {

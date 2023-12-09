@@ -1,11 +1,14 @@
 #ifndef VV_ENCRYPT_H
 #define VV_ENCRYPT_H
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
-#include <sys/_types/_size_t.h>
+// #include <sys/_types/_size_t.h>
 
 void generate_keys(EVP_PKEY *pkey);
+int generate_rsa_key(EVP_PKEY **pkey, int key_size);
 long get_private_key(EVP_PKEY *pkey, char **private_key_copy);
 long get_public_key(EVP_PKEY *pkey, char **public_key_copy);
 EVP_PKEY *get_public_key_from_string(char *public_key_string);

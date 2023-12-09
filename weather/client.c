@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/_types/_size_t.h>
+// #include <sys/_types/_size_t.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -35,6 +35,15 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  int type = 0;
+  type = atoi(argv[3]);
+
+  if (type < 0 || type > 2) {
+    printf("Invalid encode type\n");
+    return 1;
+  }
+
+
   int client_socket = socket(AF_INET, SOCK_STREAM, 0);
   if (client_socket == -1) {
     perror("Error creating socket\n");
@@ -51,7 +60,12 @@ int main(int argc, char **argv) {
   }
 
   EVP_PKEY *pkey = EVP_PKEY_new();
-  generate_keys(pkey);
+  // generate_keys(pkey);
+  int key_size = 4096;
+  if (type == 2) {
+    key_size = 8192;
+  }
+  generate_rsa_key(&pkey, key_size);
   long public_key_length = 0;
   char *public_key = NULL;
   public_key_length = get_public_key(pkey, &public_key);
@@ -66,10 +80,21 @@ int main(int argc, char **argv) {
     perror("Error sending public key to server");
     return 1;
   }
+  printf("Server public key: %s\n", server_public_key);
+  printf("Client public key: %s\n", public_key);  
 
+  size_t ret;
+  char *message = "Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client.";
+  size_t message_length = strlen(message) + 1;
   EVP_PKEY *server_pkey = get_public_key_from_string(server_public_key);
-  // encrypt_message(server_pkey, "Hello", &encrypted_message,
+
+  char *encrypted_message = NULL;
+  size_t encrypted_message_length;
+
+  // encrypt_message(server_pkey, message, &encrypted_message,
   //                 &encrypted_message_length);
+
+  // printf("Encrypted message: %s\n", encrypted_message);
   // size_t sent =
   //     send(client_socket, encrypted_message, encrypted_message_length, 0);
   // printf("Sent %zu bytes\n", sent);
@@ -94,14 +119,7 @@ int main(int argc, char **argv) {
   weather_data->wind_chill = 1.3;
   weather_data->snow_depth = 19;
 
-  int type = 0;
-  type = atoi(argv[3]);
-
-  if (type < 0 || type > 2) {
-    printf("Invalid encode type\n");
-    return 1;
-  }
-
+  
   uint8_t *buffer = NULL;
   size_t size;
   if (weather_data_serialize(weather_data, &buffer, &size, type) == -1) {
@@ -112,22 +130,24 @@ int main(int argc, char **argv) {
   print_weather_data(weather_data);
   printf("Sending %lu bytes\n", size);
   printf("Buffer: %s\n", buffer);
-  size_t ret;
-  char *encrypted_message;
-  size_t encrypted_message_length;
+
+  // char *encrypted_message;
+  // size_t encrypted_message_length;
   encrypt_message(server_pkey, (char *)buffer, &encrypted_message,
                   &encrypted_message_length);
   printf("Encrypted message: %s\n", encrypted_message);
   printf("Encrypted message length: %zu\n", encrypted_message_length);
 
   if ((ret = send(client_socket, encrypted_message, encrypted_message_length,
-                  0)) != size) {
+                  0)) != encrypted_message_length) {
     printf("ret: %zu\n", ret);
     perror("Error sending data");
     return 1;
   }
 
-  // recv(client_socket, buffer, size, 0);
+  // char buffer[BUFSIZ];
+
+  // recv(client_socket, buffer, sizeof(buffer), 0);
   // printf("Server: %s\n", buffer);
 
   weather_data_free(weather_data);

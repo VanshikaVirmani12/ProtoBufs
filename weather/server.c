@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/_types/_size_t.h>
+// #include <sys/_types/_size_t.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -33,6 +33,15 @@ int main(int argc, char **argv) {
     printf("Usage: %s <port> <type of encoding>\n", argv[0]);
     return 1;
   };
+
+  int type = 0;
+
+  type = atoi(argv[2]);
+  if (type < 0 || type > 2) {
+    printf("Invalid encode type\n");
+    return 1;
+  }
+
 
   int server_socket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -63,7 +72,12 @@ int main(int argc, char **argv) {
   }
 
   EVP_PKEY *pkey = EVP_PKEY_new();
-  generate_keys(pkey);
+  // generate_keys(pkey);
+  int key_size = 4096;
+  if (type == 2) {
+    key_size = 8192;
+  }
+  generate_rsa_key(&pkey, key_size);
   long public_key_length = 0;
   char *public_key = NULL;
   public_key_length = get_public_key(pkey, &public_key);
@@ -81,10 +95,14 @@ int main(int argc, char **argv) {
     close(client_socket);
     return 1;
   };
-  // char buffer[BUFSIZ];
+  // printf("Client public key: %s\n", client_public_key);
+  // printf("Server public key: %s\n", public_key);
+
+  // char buffer[2048];
   // size_t received = recv(client_socket, buffer, sizeof(buffer), 0);
   // printf("Received %lu bytes\n", received);
   // printf("Received: %s\n", buffer);
+
   // char *decrypted_message = NULL;
   // size_t decrypted_message_length = 0;
   // decrypt_message(pkey, buffer, &decrypted_message,
@@ -92,18 +110,11 @@ int main(int argc, char **argv) {
   //                 received);
   // printf("Decrypted message: %s\n", decrypted_message);
 
-  int type = 0;
-
-  type = atoi(argv[2]);
-  if (type < 0 || type > 2) {
-    printf("Invalid encode type\n");
-    return 1;
-  }
-
+ 
   char buffer[BUFSIZ];
   WeatherData *weather_data = NULL;
   size_t received = recv(client_socket, buffer, sizeof(buffer), 0);
-  printf("Received %lu bytes\n", sizeof(buffer));
+  printf("Received %lu bytes\n", received);
   printf("Received: %s\n", buffer);
   char *decrypted_message = NULL;
   size_t decrypted_message_length = 0;
