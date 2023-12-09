@@ -53,7 +53,7 @@ int weather_data_pb_serialize(WeatherData *weather_data, uint8_t **buffer,
   memcpy(offset_ptr, &tmpl, sizeof(uint32_t));
   offset_ptr += sizeof(uint32_t);
 
-  for (int i = 0; i < 7; i++) {
+  for (int i = 0; i < 12; i++) {
     if (strcmp(weather_data->month, months[i]) == 0) {
       temp_date = i;
       break;
