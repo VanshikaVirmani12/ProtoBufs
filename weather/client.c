@@ -106,7 +106,6 @@ int main(int argc, char **argv) {
   weather_data->wind_chill = 1.3;
   weather_data->snow_depth = 19;
 
-  
   uint8_t *buffer = NULL;
   size_t size;
   if (weather_data_serialize(weather_data, &buffer, &size, type) == -1) {
@@ -122,8 +121,8 @@ int main(int argc, char **argv) {
   size_t encrypted_message_length;
 
   if (type == 0) {
-    encrypt_protobuf(buffer, size, server_public_key, private_key, &encrypted_message,
-                     &encrypted_message_length);
+    encrypt_protobuf((char *)buffer, size, server_public_key, private_key,
+                     &encrypted_message, &encrypted_message_length);
   } else {
     encrypt_message(server_pkey, (char *)buffer, &encrypted_message,
                     &encrypted_message_length);

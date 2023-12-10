@@ -10,6 +10,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <openssl/evp.h>
@@ -63,6 +64,11 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  if (type < 0 || type > 2) {
+    printf("Invalid encode type\n");
+    return 1;
+  }
+
   EVP_PKEY *pkey = EVP_PKEY_new();
   // generate_keys(pkey);
   int key_size = 4096;
@@ -79,6 +85,8 @@ int main(int argc, char **argv) {
   long private_key_length = 0;
   char *private_key = NULL;
   private_key_length = get_private_key(pkey, &private_key);
+  // time_t start, end;
+  clock_t t;
 
   while (1) {
     printf("Waiting for connection...\n");
@@ -88,43 +96,49 @@ int main(int argc, char **argv) {
       continue;
     }
     printf("Connection accepted\n");
+    // start = time(NULL);
+    t = clock();
 
+    if (send(client_socket, public_key, public_key_length, 0) == -1) {
+      perror("Error sending public key");
+      close(server_socket);
+      close(client_socket);
+      return 1;
+    };
+    char *client_public_key = malloc(public_key_length);
+    if (recv(client_socket, client_public_key, public_key_length, 0) == -1) {
+      perror("Error receiving client public key");
+      close(server_socket);
+      close(client_socket);
+      return 1;
+    };
 
-  if (send(client_socket, public_key, public_key_length, 0) == -1) {
-    perror("Error sending public key");
-    close(server_socket);
-    close(client_socket);
-    return 1;
-  };
-  char *client_public_key = malloc(public_key_length);
-  if (recv(client_socket, client_public_key, public_key_length, 0) == -1) {
-    perror("Error receiving client public key");
-    close(server_socket);
-    close(client_socket);
-    return 1;
-  };
- 
-  char buffer[BUFSIZ];
-  WeatherData *weather_data = NULL;
-  size_t received = recv(client_socket, buffer, sizeof(buffer), 0);
-  printf("Received %lu bytes\n", received);
-  printf("Received: %s\n", buffer);
-  char *decrypted_message = NULL;
-  size_t decrypted_message_length = 0;
+    char buffer[BUFSIZ];
+    WeatherData *weather_data = NULL;
+    size_t received = recv(client_socket, buffer, sizeof(buffer), 0);
+    printf("Received %lu bytes\n", received);
+    printf("Received: %s\n", buffer);
+    char *decrypted_message = NULL;
+    size_t decrypted_message_length = 0;
 
-  if (type == 0) {
-    decrypt_protobuf(buffer, received, public_key, private_key, &decrypted_message,
-                    &decrypted_message_length);
-  } else {
-    decrypt_message(pkey, buffer, &decrypted_message, &decrypted_message_length,
-                  received);
-  }
-  printf("Decrypted message: %s\n", decrypted_message);
-  weather_data_deserialize(&weather_data, (uint8_t *)decrypted_message, type);
-  print_weather_data(weather_data);
+    if (type == 0) {
+      decrypt_protobuf(buffer, received, public_key, private_key,
+                       &decrypted_message, &decrypted_message_length);
+    } else {
+      decrypt_message(pkey, buffer, &decrypted_message,
+                      &decrypted_message_length, received);
+    }
+    printf("Decrypted message: %s\n", decrypted_message);
+    weather_data_deserialize(&weather_data, (uint8_t *)decrypted_message, type);
+    print_weather_data(weather_data);
 
     weather_data_free(weather_data);
     free(decrypted_message);
+
+    // end = time(NULL);
+    // printf("Time elapsed: %.2fs\n", difftime(end, start));
+    printf("Number of clock ticks: %ld (%.2f seconds)\n", t,
+           ((float)t) / CLOCKS_PER_SEC);
 
     close(client_socket);
   }
