@@ -1,6 +1,7 @@
 #include "weather_data_xml.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // Serialize WeatherData to XML
 xmlNodePtr weather_data_to_xml(const WeatherData *weather_data) {
@@ -101,9 +102,9 @@ WeatherData *xml_to_weather_data(xmlNodePtr weatherNode) {
   while (child != NULL) {
     if (child->type == XML_ELEMENT_NODE) {
       if (xmlStrEqual(child->name, BAD_CAST "DayOfWeek")) {
-        weather_data->day_of_week = xmlNodeGetContent(child);
+        strcpy(weather_data->day_of_week, xmlNodeGetContent(child));
       } else if (xmlStrEqual(child->name, BAD_CAST "Month")) {
-        weather_data->month = xmlNodeGetContent(child);
+        strcpy(weather_data->month, xmlNodeGetContent(child));
       } else if (xmlStrEqual(child->name, BAD_CAST "Time")) {
         weather_data->time = atoi(xmlNodeGetContent(child));
       } else if (xmlStrEqual(child->name, BAD_CAST "Day")) {

@@ -9,16 +9,16 @@ CFLAGS = -Wall -g -Wno-pointer-sign
 
 LDFLAGS = -ljansson -D_DEFAULT_SOURCE -I/usr/include/libxml2 -lxml2 -lssl -lcrypto
 
-mkdir $(BUILD_DIR):
+$(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-$(BUILD_DIR)/protobuf.o: protobuf/weather_data_pb.c protobuf/weather_data_pb.h
-	$(CC) $(CFLAGS) -c protobuf/weather_data_pb.c -o $@
+$(BUILD_DIR)/protobuf.o: protobuf/weather_data_pb.c protobuf/weather_data_pb.h $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c protobuf/weather_data_pb.c -o $@ 
 
-$(BUILD_DIR)/json.o: json/weather_data_json.c json/weather_data_json.h
+$(BUILD_DIR)/json.o: json/weather_data_json.c json/weather_data_json.h $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c json/weather_data_json.c -o $@ -ljansson -D_DEFAULT_SOURCE
 
-$(BUILD_DIR)/xml.o: xml/weather_data_xml.c xml/weather_data_xml.h
+$(BUILD_DIR)/xml.o: xml/weather_data_xml.c xml/weather_data_xml.h $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c xml/weather_data_xml.c -o $@ -I/usr/include/libxml2 -lxml2
 
 client: client.o weather_data_def.c encrypt.c protobuf_enc.c $(BUILD_DIR)/protobuf.o $(BUILD_DIR)/json.o $(BUILD_DIR)/xml.o

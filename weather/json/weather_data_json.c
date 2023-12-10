@@ -1,6 +1,6 @@
 #include "weather_data_json.h"
 #include <stdlib.h>
-#include <endian.h>
+#include <string.h>
 // #include <sys/_types/_off_t.h>
 
 // Serialize WeatherDataJson struct to JSON
@@ -45,14 +45,14 @@ WeatherData *weather_data_json_deserialize(json_t *json) {
     free(weather_data);
     return NULL;
   }
-  weather_data->day_of_week = (char *)json_string_value(day_of_week);
+  strcpy(weather_data->day_of_week, (char *)json_string_value(day_of_week));
 
   json_t *month = json_object_get(json, "month");
   if (month == NULL) {
     free(weather_data);
     return NULL;
   }
-  weather_data->month = (char *)json_string_value(month);
+  strcpy(weather_data->month, (char *)json_string_value(month));
 
   json_t *time = json_object_get(json, "time");
   if (time == NULL) {

@@ -55,3 +55,4 @@ dkms.conf
 *client
 *server
 /weather/v1/Session.vim
+.vscode/settings.json
