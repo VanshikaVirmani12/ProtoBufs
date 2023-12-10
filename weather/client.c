@@ -72,6 +72,10 @@ int main(int argc, char **argv) {
 
   char server_public_key[public_key_length];
 
+  long private_key_length = 0;
+  char *private_key = NULL;
+  private_key_length = get_private_key(pkey, &private_key);
+
   if (recv(client_socket, server_public_key, public_key_length, 0) == -1) {
     perror("Error receiving public key from server");
     return 1;
@@ -117,11 +121,8 @@ int main(int argc, char **argv) {
   char *encrypted_message = NULL;
   size_t encrypted_message_length;
 
-  char iv[] = "InitializationVe";
-  char key[] = "SixteenByteKey!";
-
   if (type == 0) {
-    encrypt_protobuf(buffer, size , key, iv, &encrypted_message,
+    encrypt_protobuf(buffer, size, server_public_key, private_key, &encrypted_message,
                      &encrypted_message_length);
   } else {
     encrypt_message(server_pkey, (char *)buffer, &encrypted_message,
