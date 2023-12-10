@@ -82,9 +82,8 @@ int main(int argc, char **argv) {
   char *public_key = NULL;
   public_key_length = get_public_key(pkey, &public_key);
 
-  long private_key_length = 0;
   char *private_key = NULL;
-  private_key_length = get_private_key(pkey, &private_key);
+  get_private_key(pkey, &private_key);
   // time_t start, end;
   clock_t t;
 

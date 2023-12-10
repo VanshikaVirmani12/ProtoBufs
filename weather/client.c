@@ -72,9 +72,8 @@ int main(int argc, char **argv) {
 
   char server_public_key[public_key_length];
 
-  long private_key_length = 0;
   char *private_key = NULL;
-  private_key_length = get_private_key(pkey, &private_key);
+  get_private_key(pkey, &private_key);
 
   if (recv(client_socket, server_public_key, public_key_length, 0) == -1) {
     perror("Error receiving public key from server");
