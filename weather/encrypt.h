@@ -16,7 +16,7 @@ EVP_PKEY *get_private_key_from_string(char *private_key_string);
 void encrypt_message(EVP_PKEY *pkey, char *message, char **encrypted_message,
                      size_t *encrypted_message_length);
 void decrypt_message(EVP_PKEY *pkey, char *encrypted_message,
-                     char **decrypted_message, size_t *decrypted_message_length,
-                     size_t encrypted_message_length);
+                    char **decrypted_message, size_t *decrypted_message_length,
+                    size_t encrypted_message_length);
 
 #endif // VV_ENCRYPT_H

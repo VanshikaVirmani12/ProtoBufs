@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "encrypt.h"
+#include "protobuf_enc.h"
 #include "weather_data_def.h"
 
 struct sockaddr_in initialize_server_address(char *ip, char *port) {
@@ -84,12 +85,9 @@ int main(int argc, char **argv) {
   printf("Client public key: %s\n", public_key);  
 
   size_t ret;
-  char *message = "Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client.";
-  size_t message_length = strlen(message) + 1;
+  // char *message = "Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client. Hello from client.";
+  // size_t message_length = strlen(message) + 1;
   EVP_PKEY *server_pkey = get_public_key_from_string(server_public_key);
-
-  char *encrypted_message = NULL;
-  size_t encrypted_message_length;
 
   // encrypt_message(server_pkey, message, &encrypted_message,
   //                 &encrypted_message_length);
@@ -118,7 +116,6 @@ int main(int argc, char **argv) {
   weather_data->dew_point = 1.2;
   weather_data->wind_chill = 1.3;
   weather_data->snow_depth = 19;
-
   
   uint8_t *buffer = NULL;
   size_t size;
@@ -131,10 +128,25 @@ int main(int argc, char **argv) {
   printf("Sending %lu bytes\n", size);
   printf("Buffer: %s\n", buffer);
 
-  // char *encrypted_message;
-  // size_t encrypted_message_length;
-  encrypt_message(server_pkey, (char *)buffer, &encrypted_message,
-                  &encrypted_message_length);
+  char iv[] = "InitializationVe";
+  char key[] = "SixteenByteKey!";
+
+  char *encrypted_message;
+  size_t encrypted_message_length;
+
+  // char * message = "Hello";
+  // size_t message_length = strlen(message) + 1;
+
+  if (type == 0) {
+    encrypt_protobuf(buffer, size , key, iv, &encrypted_message,
+                     &encrypted_message_length);
+  } else {
+    encrypt_message(server_pkey, (char *)buffer, &encrypted_message,
+                    &encrypted_message_length);
+  }
+  // // encrypt_message(server_pkey, (char *)buffer, &encrypted_message,
+  // //                 &encrypted_message_length);
+  // printf("Message: %s\n", message); 
   printf("Encrypted message: %s\n", encrypted_message);
   printf("Encrypted message length: %zu\n", encrypted_message_length);
 

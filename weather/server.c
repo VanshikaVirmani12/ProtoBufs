@@ -1,4 +1,5 @@
 #include "encrypt.h"
+#include "protobuf_enc.h"
 #include "weather_data_def.h"
 
 #include <arpa/inet.h>
@@ -116,11 +117,25 @@ int main(int argc, char **argv) {
   size_t received = recv(client_socket, buffer, sizeof(buffer), 0);
   printf("Received %lu bytes\n", received);
   printf("Received: %s\n", buffer);
+
   char *decrypted_message = NULL;
   size_t decrypted_message_length = 0;
-  decrypt_message(pkey, buffer, &decrypted_message, &decrypted_message_length,
+
+  // long private_key_length = 0;
+  // char *private_key = NULL;
+  // private_key_length = get_private_key(pkey, &private_key);
+
+  char iv[] = "InitializationVe";
+  char key[] = "SixteenByteKey!";
+  if (type == 0) {
+    decrypt_protobuf(buffer, received, key, iv, &decrypted_message,
+                     &decrypted_message_length);
+  } else {
+    decrypt_message(pkey, buffer, &decrypted_message, &decrypted_message_length,
                   received);
+  }
   printf("Decrypted message: %s\n", decrypted_message);
+
   weather_data_deserialize(&weather_data, (uint8_t *)decrypted_message, type);
   print_weather_data(weather_data);
 

@@ -147,42 +147,72 @@ void encrypt_message(EVP_PKEY *pkey, char *message, char **encrypted_message,
 }
 
 void decrypt_message(EVP_PKEY *pkey, char *encrypted_message,
-                     char **decrypted_message, size_t *decrypted_message_length,
-                     size_t encrypted_message_length) {
+                    char **decrypted_message, size_t *decrypted_message_length,
+                    size_t encrypted_message_length) {
   EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, NULL);
   if (!ctx) {
     printf("Error creating context\n");
+    EVP_PKEY_CTX_free(ctx);
     return;
   }
   if (EVP_PKEY_decrypt_init(ctx) <= 0) {
     printf("Error initializing decryption\n");
+    EVP_PKEY_CTX_free(ctx);
     return;
   }
   if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0) {
     printf("Error setting padding\n");
+    EVP_PKEY_CTX_free(ctx);
     return;
   }
+  
   if (EVP_PKEY_decrypt(ctx, NULL, decrypted_message_length,
-                       (unsigned char *)encrypted_message,
-                       encrypted_message_length) <= 0) {
-    printf("Error getting decrypted message length\n");
-    return;
-  }
-  unsigned char *plaintext = OPENSSL_malloc(*decrypted_message_length);
-  if (!plaintext) {
-    printf("Error allocating memory for decrypted message\n");
-    return;
-  }
-  if (EVP_PKEY_decrypt(ctx, plaintext, decrypted_message_length,
                        (unsigned char *)encrypted_message,
                        encrypted_message_length) <= 0) {
     printf("Error decrypting message\n");
     return;
   }
-  *decrypted_message = malloc(*decrypted_message_length + 1);
-  memcpy(*decrypted_message, plaintext, *decrypted_message_length);
+
+  *decrypted_message =  OPENSSL_malloc(*decrypted_message_length);
+
+  if (!*decrypted_message) {
+    printf("Error allocating memory for decrypted message\n");
+    EVP_PKEY_CTX_free(ctx);
+    return;
+  }
+  
+  if (EVP_PKEY_decrypt(ctx, *decrypted_message, decrypted_message_length,
+                       (unsigned char *) encrypted_message,
+                       encrypted_message_length) <= 0) {
+    ERR_print_errors_fp(stderr);
+    printf("Error getting decrypted message length\n");
+    free(*decrypted_message);
+    EVP_PKEY_CTX_free(ctx);
+    return;
+  }
+
+
+  // unsigned char *plaintext = OPENSSL_malloc(*decrypted_message_length);
+
+  // if (!plaintext) {
+  //   printf("Error allocating memory for decrypted message\n");
+  //   return;
+  // }
+
+  // if (EVP_PKEY_decrypt(ctx, plaintext, decrypted_message_length,
+  //                     (unsigned char *)encrypted_message,
+  //                     encrypted_message_length) <= 0) {
+  //   printf("Error decrypting message\n");
+  //   return;
+  // }
+
+  // *decrypted_message = malloc(*decrypted_message_length + 1);
+  // memcpy(*decrypted_message, plaintext, *decrypted_message_length);
+  // (*decrypted_message)[*decrypted_message_length] = '\0';
+  // OPENSSL_free(plaintext);
+
   (*decrypted_message)[*decrypted_message_length] = '\0';
-  OPENSSL_free(plaintext);
+
   EVP_PKEY_CTX_free(ctx);
 }
 
