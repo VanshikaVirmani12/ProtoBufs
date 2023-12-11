@@ -1,5 +1,5 @@
 all:
-	@$(MAKE) -C weather/v1/ all
+	@$(MAKE) -C weather/ all
 
 clean:
-	@$(MAKE) -C weather/v1/ clean
+	@$(MAKE) -C weather/ clean
