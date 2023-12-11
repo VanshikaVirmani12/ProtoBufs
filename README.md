@@ -10,13 +10,15 @@ make
 ```
 (Ensure that you have the OpenSSL library, Jansson library and the xml2 library)
 
+Run
 ```
-Run ./server <port> <enc-type>
+./server <port> <enc-type>
 ```
 , where enc-type is 0 (ProtoBuf), 1 (JSON), or 2 (XML).
 
+Run
 ```
-Run ./client <IP address of computer with server> <port> <enc-type> 
+./client <IP address of computer with server> <port> <enc-type> 
 ```
 where port and enc-type are the same as the server, IP address can be 127.0.0.1 if server is on the same computer.
 
