@@ -1,7 +1,6 @@
 #include "weather_data_json.h"
 #include <stdlib.h>
 #include <string.h>
-// #include <sys/_types/_off_t.h>
 
 // Serialize WeatherDataJson struct to JSON
 json_t *weather_data_json_serialize(const WeatherData *weatherDataJson) {

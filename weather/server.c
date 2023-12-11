@@ -70,7 +70,6 @@ int main(int argc, char **argv) {
   }
 
   EVP_PKEY *pkey = EVP_PKEY_new();
-  // generate_keys(pkey);
   int key_size = 4096;
   if (type == 2) {
     key_size = 8192;
@@ -84,7 +83,6 @@ int main(int argc, char **argv) {
 
   char *private_key = NULL;
   get_private_key(pkey, &private_key);
-  // time_t start, end;
   clock_t t;
 
   while (1) {
@@ -95,7 +93,6 @@ int main(int argc, char **argv) {
       continue;
     }
     printf("Connection accepted\n");
-    // start = time(NULL);
     t = clock();
 
     if (send(client_socket, public_key, public_key_length, 0) == -1) {
@@ -134,8 +131,6 @@ int main(int argc, char **argv) {
     weather_data_free(weather_data);
     free(decrypted_message);
 
-    // end = time(NULL);
-    // printf("Time elapsed: %.2fs\n", difftime(end, start));
     printf("Number of clock ticks: %ld (%.2f seconds)\n", t,
            ((float)t) / CLOCKS_PER_SEC);
 
